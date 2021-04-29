@@ -7,7 +7,7 @@ Created on Tue Apr 20 15:43:56 2021
 """
 class Client:
     
-    def __init__(self, dataset_x, dataset_y, epoch_number,weights):
+    def __init__(self, dataset_x, dataset_y, epoch_number,weights,batch):
         self.dataset_x=dataset_x
         self.dataset_y=dataset_y
         # self.mini_batch=mini_batch
@@ -15,6 +15,7 @@ class Client:
         # self.learning_rate=learning_rate
         # self.decay_rate=decay_rate
         self.weights=weights
+        self.batch=batch
         
         
     def train(self): 
@@ -44,7 +45,7 @@ class Client:
         # wait.start()
         
         model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
-        history=model.fit(self.dataset_x, self.dataset_y,epochs=self.epoch_number,batch_size=32) 
+        history=model.fit(self.dataset_x, self.dataset_y,epochs=self.epoch_number,batch_size=self.batch) 
         
         #getting the final_weight
         output_weight=model.get_weights()

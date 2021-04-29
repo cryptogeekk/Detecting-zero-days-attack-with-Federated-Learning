@@ -10,6 +10,7 @@ import pandas as pd
 import matplotlib as plt
 from tensorflow import keras
 import time
+import pickle
 
 
 #loading the dataset ##should be in the form of X_train, y_train, X_valid,y_valid
@@ -20,9 +21,27 @@ import dataset_divider
 #getting iid data
 x_data, y_data=dataset_divider.divide_without_label(10,X_train, y_train)
 
-#getting non-iid data
+y_data_list=[]
+for index in range(0,len(y_data)):
+    temp=np.array(y_data[index])
+    y_data_list.append(temp)
+    
+y_data=y_data_list
+    
+
+#getting non-iid data when there are 5 clients and each client have one attack. Here we don't need 
+#shuflle so dataset.divider.divide with label is sufficient
+x_data, y_data=dataset_divider.divide_with_label(5,X_train, y_train)
+with open("train_x_non_iid_5_client.txt", "rb") as fp:   
+    x_data=pickle.load(x_data, fp)
+
+with open("train_y_non_iid_5_client.txt", "rb") as fp:   
+    y_data=pickle.load(y_data, fp)
+
+#getting non-iid data when one client have multiple attack classes and the attack need to be shuffled.
 x_data_temp, y_data_temp=dataset_divider.divide_with_label(4,X_train, y_train)
 x_data,y_data=dataset_divider.get_non_iid_data(x_data_temp,y_data_temp,5)
+
 
 
 #function for averaging
@@ -73,7 +92,7 @@ def evaluate_model(accuracy_list,weight):
     
 #initializing the client automatically
 from client import Client
-def train_server(training_rounds,epoch):
+def train_server(training_rounds,epoch,batch):
     accuracy_list=[]
     client_weight_for_sending=[]
     
@@ -85,11 +104,11 @@ def train_server(training_rounds,epoch):
             if index1==1:
                 print('Sharing Initial Global Model with Random Weight Initialization')
                 initial_weight=create_model()
-                client=Client(x_data[index],y_data[index],epoch,initial_weight)
+                client=Client(x_data[index],y_data[index],epoch,initial_weight,batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
             else:
-                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2])
+                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2],batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
     
@@ -110,7 +129,7 @@ def train_server(training_rounds,epoch):
     return accuracy_list
 
 
-def train_server_weight_discard(training_rounds,epoch):
+def train_server_weight_discard(training_rounds,epoch,batch):
     accuracy_list=[]
     client_weight_for_sending=[]
     
@@ -122,11 +141,11 @@ def train_server_weight_discard(training_rounds,epoch):
             if index1==1:
                 print('Sharing Initial Global Model with Random Weight Initialization')
                 initial_weight=create_model()
-                client=Client(x_data[index],y_data[index],epoch,initial_weight)
+                client=Client(x_data[index],y_data[index],epoch,initial_weight,batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
             else:
-                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2])
+                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2],batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
         
@@ -155,7 +174,7 @@ def train_server_weight_discard(training_rounds,epoch):
         
 #initializng the traiing work
 start=time.time()
-training_accuracy=train_server_weight_discard(200,5)
+training_accuracy=train_server_weight_discard(200,5,128)
 end=time.time()
 print('TOTAL TIME ELPASED = ', end-start)
 

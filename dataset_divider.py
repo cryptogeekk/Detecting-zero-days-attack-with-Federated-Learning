@@ -26,9 +26,12 @@ def divide_without_label(parts, X_train_full,y_train_full):
 def divide_with_label(parts, X_train_full, y_train_full):
     
     # #temp_variable
-    X_train_full=X_train
-    y_train_full=y_train
-    parts=5
+    # X_train_full=X_train
+    # y_train_full=y_train
+    # parts=5
+    
+    #finding the name of column
+    column_name=X_train_full.columns
     
     #assigning index from 0 instead of 0 in X_train_full
     X_train_full.index=np.arange(0,len(X_train_full))
@@ -41,35 +44,22 @@ def divide_with_label(parts, X_train_full, y_train_full):
         print('The entered parts is invalid. ----Closing the program----')
         
     else:
-        x_train_list=[[],[],[],[],[],[],[],[],[],[]]
-        y_train_list=[[],[],[],[],[],[],[],[],[],[]]
-        
+        #creating required number of dataframe as per the number of client
+        x_train_list=[]
+        y_train_list=[]
+        for x in range (0,parts):
+            x_train_list.append(pd.DataFrame(columns=column_name))
+            y_train_list.append([])
+                
         for index in range(len(y_train_full)):
+            print((index/len(y_train_full))*100)
             for index1 in range(len(labels)):
                 if y_train_full[index]==labels[index1]:
                     y_train_list[labels[index1]].append(y_train_full[index])
-                    x_train_list[labels[index1]].append(X_train_full.iloc[[index]])
-                    
-        no_of_list=0
-        for list_1 in y_train_list:
-            if len(list_1)==0:
-                no_of_list=no_of_list+1
-                
-    
-        each_part_number1=int(no_of_list/parts)
-    
-        x_train_list1=[[],[],[],[],[],[],[],[],[],[]]
-        y_train_list1=[[],[],[],[],[],[],[],[],[],[]]
+                    x_train_list[labels[index1]]=x_train_list[labels[index1]].append(X_train_full.iloc[index],ignore_index=True)
+
         
-        count=0
-        for index in range(parts):
-            for index1 in range(each_part_number1):
-                x_train_list1[index].append(x_train_list[count])
-                y_train_list1[index].append(y_train_list[count])
-            
-                count=count+1
-        
-        return x_train_list1,y_train_list1
+    return x_train_list,y_train_list
         
 def get_data(x_data,y_data,count,data_type):
     from sklearn.utils import shuffle
@@ -88,15 +78,22 @@ def get_data(x_data,y_data,count,data_type):
         return train_data_1, test_data_1
     
 def get_non_iid_data(x_data_temp,y_data_temp,clients):
-    clients=5
+    # clients=5
     x_data=[]
     y_data=[]
+    
+    #temp_variables
+    
+    
     for index in range(0,clients):
         x_data_temp1,y_data_temp1=get_data(x_data_temp,y_data_temp,index,'non-iid')
         x_data.append(x_data_temp1)
         y_data.append(y_data_temp1)
     
     return x_data, y_data
+
+
+
     
 
 
