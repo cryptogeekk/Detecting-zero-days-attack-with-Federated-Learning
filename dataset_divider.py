@@ -25,38 +25,47 @@ def divide_without_label(parts, X_train_full,y_train_full):
 
 def divide_with_label(parts, X_train_full, y_train_full):
     
+    # #temp_variable
+    X_train_full=X_train
+    y_train_full=y_train
+    parts=4
+    
+    #assigning index from 0 instead of 0 in X_train_full
+    X_train_full.index=np.arange(0,len(X_train_full))
+    
     value_counts=pd.Series(y_train_full).value_counts()
     each_part_number=int(len(value_counts)/parts)
     labels=pd.Series(y_train_full).unique()
 
-    if (len(labels)/parts)%each_part_number!=0:
-        print('The entered parts is invalid. ----Closing the program----')
-        
-    else:
-        x_train_list=[[],[],[],[],[],[],[],[],[],[]]
-        y_train_list=[[],[],[],[],[],[],[],[],[],[]]
-        
-        for index in range(len(y_train_full)):
-            for index1 in range(len(labels)):
-                if y_train_full[index]==labels[index1]:
-                    y_train_list[labels[index1]].append(y_train_full[index])
-                    x_train_list[labels[index1]].append(X_train_full[index])
-        
+    x_train_list=[[],[],[],[],[],[],[],[],[],[]]
+    y_train_list=[[],[],[],[],[],[],[],[],[],[]]
     
-        each_part_number1=int(len(y_train_list)/parts)
-    
-        x_train_list1=[[],[],[],[],[],[],[],[],[],[]]
-        y_train_list1=[[],[],[],[],[],[],[],[],[],[]]
-        
-        count=0
-        for index in range(parts):
-            for index1 in range(each_part_number1):
-                x_train_list1[index].append(x_train_list[count])
-                y_train_list1[index].append(y_train_list[count])
+    for index in range(len(y_train_full)):
+        for index1 in range(len(labels)):
+            if y_train_full[index]==labels[index1]:
+                y_train_list[labels[index1]].append(y_train_full[index])
+                x_train_list[labels[index1]].append(X_train_full.iloc[[index]])
+                
+    no.of_list=0
+    for list_1 in y_train_list:
+        if len(list_1)==0:
+            no.of_list=no.of_list+1
             
-                count=count+1
+
+    each_part_number1=int(no.of_list/parts)
+
+    x_train_list1=[[],[],[],[],[],[],[],[],[],[]]
+    y_train_list1=[[],[],[],[],[],[],[],[],[],[]]
+    
+    count=0
+    for index in range(parts):
+        for index1 in range(each_part_number1):
+            x_train_list1[index].append(x_train_list[count])
+            y_train_list1[index].append(y_train_list[count])
         
-        return x_train_list1,y_train_list1
+            count=count+1
+    
+    return x_train_list1,y_train_list1
         
 def get_data(x_data,y_data,count,data_type):
     from sklearn.utils import shuffle

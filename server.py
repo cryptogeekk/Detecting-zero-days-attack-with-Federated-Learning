@@ -12,25 +12,31 @@ from tensorflow import keras
 import time
 
 
-#loading the dataset
-fashion_mnist = keras.datasets.mnist
-(X_train_full, y_train_full), (X_test, y_test) = fashion_mnist.load_data()
-X_valid, X_train = X_train_full[:5000] / 255.0, X_train_full[5000:] /255.0
-y_valid, y_train = y_train_full[:5000], y_train_full[5000:]
-
-x_data, y_data=get_non_iid_data(x_data_temp,y_data_temp,5)
-
+#loading the dataset ##should be in the form of X_train, y_train, X_valid,y_valid
+import clean_data
+X_train, y_train, X_valid,y_valid=clean_data.nsl_kdd_train_data()
 
 import dataset_divider
 #getting iid data
-x_data, y_data=dataset_divider.divide_without_label(5,X_train, y_train)
+x_data, y_data=dataset_divider.divide_without_label(10,X_train, y_train)
 
 #getting non-iid data
-x_data_temp, y_data_temp=dataset_divider.divide_with_label(5,X_train, y_train)
+x_data_temp, y_data_temp=dataset_divider.divide_with_label(4,X_train, y_train)
 x_data,y_data=dataset_divider.get_non_iid_data(x_data_temp,y_data_temp,5)
 
 
 #function for averaging
+def get_model():
+    model=keras.models.Sequential([
+    keras.layers.Flatten(input_shape=[122,]),
+    keras.layers.Dense(200,activation='relu'),
+    keras.layers.Dense(100,activation='relu'),
+    keras.layers.Dense(5,activation='softmax')
+    ])
+    
+    return model
+    
+
 def model_average(client_weights):
     average_weight_list=[]
     for index1 in range(len(client_weights[0])):
@@ -44,26 +50,14 @@ def model_average(client_weights):
             
 
 def create_model():
-    model=keras.models.Sequential([
-        keras.layers.Flatten(input_shape=[28,28]),
-        keras.layers.Dense(200,activation='relu'),
-        keras.layers.Dense(200,activation='relu'),
-        keras.layers.Dense(10,activation='softmax')
-    ])
-    
+    model=get_model()
     weight=model.get_weights()
     return weight
     
 def evaluate_model(accuracy_list,weight):
-    model=keras.models.Sequential([
-    keras.layers.Flatten(input_shape=[28,28]),
-    keras.layers.Dense(200,activation='relu'),
-    keras.layers.Dense(200,activation='relu'),
-    keras.layers.Dense(10,activation='softmax')
-])
-    
+    model=get_model()  
     model.set_weights(weight)
-    model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=0.1),metrics=['accuracy'])
+    model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
     result=model.evaluate(X_valid, y_valid)
     
     if len(accuracy_list)==0:
@@ -79,7 +73,7 @@ def evaluate_model(accuracy_list,weight):
     
 #initializing the client automatically
 from client import Client
-def train_server(training_rounds,epoch,learning_rate):
+def train_server(training_rounds,epoch):
     accuracy_list=[]
     client_weight_for_sending=[]
     
@@ -91,11 +85,11 @@ def train_server(training_rounds,epoch,learning_rate):
             if index1==1:
                 print('Sharing Initial Global Model with Random Weight Initialization')
                 initial_weight=create_model()
-                client=Client(x_data[index],y_data[index],epoch,learning_rate,initial_weight)
+                client=Client(x_data[index],y_data[index],epoch,initial_weight)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
             else:
-                client=Client(x_data[index],y_data[index],epoch,learning_rate,client_weight_for_sending[index1-2])
+                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2])
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
     
@@ -105,22 +99,18 @@ def train_server(training_rounds,epoch,learning_rate):
 
 
         #validating the model with avearge weight
-        model=keras.models.Sequential([
-                keras.layers.Flatten(input_shape=[28,28]),
-                keras.layers.Dense(200,activation='relu'),
-                keras.layers.Dense(200,activation='relu'),
-                keras.layers.Dense(10,activation='softmax')
-            ])
+        model=get_model()
 
         model.set_weights(client_average_weight)
-        model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=0.1),metrics=['accuracy'])
+        model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
         result=model.evaluate(X_valid, y_valid)
         accuracy=result[1]
         print('#######-----Acccuracy for round ', index1, 'is ', accuracy, ' ------########')
         accuracy_list.append(accuracy)
     return accuracy_list
 
-def train_server_weight_discard(training_rounds,epoch,learning_rate):
+
+def train_server_weight_discard(training_rounds,epoch):
     accuracy_list=[]
     client_weight_for_sending=[]
     
@@ -132,11 +122,11 @@ def train_server_weight_discard(training_rounds,epoch,learning_rate):
             if index1==1:
                 print('Sharing Initial Global Model with Random Weight Initialization')
                 initial_weight=create_model()
-                client=Client(x_data[index],y_data[index],epoch,learning_rate,initial_weight)
+                client=Client(x_data[index],y_data[index],epoch,initial_weight)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
             else:
-                client=Client(x_data[index],y_data[index],epoch,learning_rate,client_weight_for_sending[index1-2])
+                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2])
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
         
@@ -146,15 +136,10 @@ def train_server_weight_discard(training_rounds,epoch,learning_rate):
             client_weight_for_sending.append(client_average_weight)
             
             #validating the model with avearge weight
-            model=keras.models.Sequential([
-            keras.layers.Flatten(input_shape=[28,28]),
-            keras.layers.Dense(200,activation='relu'),
-            keras.layers.Dense(200,activation='relu'),
-            keras.layers.Dense(10,activation='softmax')
-                ])
+            model=get_model()
             
             model.set_weights(client_average_weight)
-            model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=0.1),metrics=['accuracy'])
+            model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
             result=model.evaluate(X_valid, y_valid)
             accuracy=result[1]
             print('#######-----Acccuracy for round ', index1, 'is ', accuracy, ' ------########')
@@ -170,7 +155,7 @@ def train_server_weight_discard(training_rounds,epoch,learning_rate):
         
 #initializng the traiing work
 start=time.time()
-training_accuracy=train_server(200,2,0.1)
+training_accuracy=train_server_weight_discard(200,5)
 end=time.time()
 print('TOTAL TIME ELPASED = ', end-start)
 
