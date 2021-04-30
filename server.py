@@ -11,7 +11,7 @@ import matplotlib as plt
 from tensorflow import keras
 import time
 import pickle
-
+from tensorflow.keras.regularizers import l1,l2
 
 #loading the dataset ##should be in the form of X_train, y_train, X_valid,y_valid
 import clean_data
@@ -41,7 +41,7 @@ def non_iid(clients):
     y_data=y_data_list
     return x_data[:clients], y_data[:clients]
 
-x_data, y_data=non_iid(2)
+x_data, y_data=non_iid(5)
 
 #temp work----------------
 for index in range(len(y_data)):
@@ -63,9 +63,9 @@ x_data,y_data=dataset_divider.get_non_iid_data(x_data_temp,y_data_temp,5)
 def get_model():
     model=keras.models.Sequential([
     keras.layers.Flatten(input_shape=[122,]),
-    keras.layers.Dense(200,activation='relu'),
-    keras.layers.Dense(100,activation='relu'),
-    keras.layers.Dense(5,activation='softmax')
+    keras.layers.Dense(200,activation='relu',kernel_regularizer=l1(0.01)),
+    keras.layers.Dense(100,activation='relu',kernel_regularizer=l1(0.01)),
+    keras.layers.Dense(5,activation='softmax',kernel_regularizer=l1(0.01))
     ])
     
     return model
@@ -194,7 +194,7 @@ def train_server_weight_discard(training_rounds,epoch,batch):
         
 #initializng the traiing work
 start=time.time()
-training_accuracy=train_server(20,5,128)
+training_accuracy=train_server(20,5,64)
 end=time.time()
 print('TOTAL TIME ELPASED = ', end-start)
 

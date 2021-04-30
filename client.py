@@ -23,12 +23,13 @@ class Client:
         import pandas as pd
         import matplotlib as plt
         from tensorflow import keras
+        from tensorflow.keras.regularizers import  l1,l2
         
         model=keras.models.Sequential([
-                keras.layers.Flatten(input_shape=[122]),
-                keras.layers.Dense(200,activation='relu'),
-                keras.layers.Dense(100,activation='relu'),
-                keras.layers.Dense(5,activation='softmax')
+            keras.layers.Flatten(input_shape=[122,]),
+            keras.layers.Dense(200,activation='relu',kernel_regularizer=l1(0.01)),
+            keras.layers.Dense(100,activation='relu',kernel_regularizer=l1(0.01)),
+            keras.layers.Dense(5,activation='softmax',kernel_regularizer=l1(0.01))
             ])
         
         #setting weight of the model
