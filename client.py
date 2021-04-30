@@ -44,7 +44,7 @@ class Client:
         # wait=animation.Wait()
         # wait.start()
         
-        model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+        model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])  
         history=model.fit(self.dataset_x, self.dataset_y,epochs=self.epoch_number,batch_size=self.batch) 
         
         #getting the final_weight

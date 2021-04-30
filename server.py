@@ -20,23 +20,38 @@ X_train, y_train, X_valid,y_valid=clean_data.nsl_kdd_train_data()
 import dataset_divider
 #getting iid data
 x_data, y_data=dataset_divider.divide_without_label(10,X_train, y_train)
-
-y_data_list=[]
-for index in range(0,len(y_data)):
-    temp=np.array(y_data[index])
-    y_data_list.append(temp)
-    
-y_data=y_data_list
     
 
 #getting non-iid data when there are 5 clients and each client have one attack. Here we don't need 
 #shuflle so dataset.divider.divide with label is sufficient
 x_data, y_data=dataset_divider.divide_with_label(5,X_train, y_train)
-with open("train_x_non_iid_5_client.txt", "rb") as fp:   
-    x_data=pickle.load(x_data, fp)
 
-with open("train_y_non_iid_5_client.txt", "rb") as fp:   
-    y_data=pickle.load(y_data, fp)
+def non_iid(clients):    
+    file = open("train_x_non_iid_5_client.txt",'rb')
+    x_data= pickle.load(file)
+    
+    file = open("train_y_non_iid_5_client.txt",'rb')
+    y_data= pickle.load(file)
+
+    y_data_list=[]
+    for index in range(0,len(y_data)):
+        temp=np.array(y_data[index])
+        y_data_list.append(temp)
+        
+    y_data=y_data_list
+    return x_data[:clients], y_data[:clients]
+
+x_data, y_data=non_iid(2)
+
+#temp work----------------
+for index in range(len(y_data)):
+    print(pd.Series(y_data[index]).value_counts())
+    
+pd.Series(y_valid).value_counts()
+
+#deleting the 2,3,4 of test dataset
+
+#---------------------------
 
 #getting non-iid data when one client have multiple attack classes and the attack need to be shuffled.
 x_data_temp, y_data_temp=dataset_divider.divide_with_label(4,X_train, y_train)
@@ -93,6 +108,11 @@ def evaluate_model(accuracy_list,weight):
 #initializing the client automatically
 from client import Client
 def train_server(training_rounds,epoch,batch):
+    #temp_variable
+    # training_rounds=2 
+    # epoch=5 
+    # batch=128
+    
     accuracy_list=[]
     client_weight_for_sending=[]
     
@@ -133,7 +153,7 @@ def train_server_weight_discard(training_rounds,epoch,batch):
     accuracy_list=[]
     client_weight_for_sending=[]
     
-    for index1 in range(1,200):
+    for index1 in range(1,training_rounds):
         print('Training for round ', index1, 'started')
         client_weights_tobe_averaged=[]
         for index in range(len(y_data)):
@@ -174,12 +194,12 @@ def train_server_weight_discard(training_rounds,epoch,batch):
         
 #initializng the traiing work
 start=time.time()
-training_accuracy=train_server_weight_discard(200,5,128)
+training_accuracy=train_server(20,5,128)
 end=time.time()
 print('TOTAL TIME ELPASED = ', end-start)
 
 #plotting the graph
-plt.pyplot.plot(accuracy_list,label='train')
+plt.pyplot.plot(training_accuracy,label='train')
 plt.legend()
 plt.show()
 
