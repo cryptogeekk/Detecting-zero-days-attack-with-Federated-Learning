@@ -11,11 +11,34 @@ import matplotlib as plt
 from tensorflow import keras
 import time
 import pickle
-from tensorflow.keras.regularizers import l1,l2
+from imblearn.over_sampling import SMOTE
+from tensorflow.keras.regularizers import  l1,l2
 
 #loading the dataset ##should be in the form of X_train, y_train, X_valid,y_valid
 import clean_data
 X_train, y_train, X_valid,y_valid=clean_data.nsl_kdd_train_data()
+X_valid.index=np.arange(0,len(y_valid))
+
+#oversmapling the data
+oversample=SMOTE()
+X_train,y_train=oversample.fit_resample(X_train,y_train)
+
+#saving the oversampled dataset
+# with open("train_x_non_iid_5_client.txt", "wb") as fp:   
+#     pickle.dump(x_data, fp)
+    
+# with open("train_y_non_iid_5_client.txt", "wb") as fp:   
+#     pickle.dump(y_data, fp)
+
+#temp_variable
+X_train1=X_train
+y_train1=y_train
+    
+X_train=X_train[:int(0.8*len(X_train1))]
+y_train=y_train[:int(0.8*len(y_train1))]
+
+X_valid=X_train1[int(0.8*len(X_train1)):]
+y_valid=y_train1[int(0.8*len(y_train1)):]
 
 import dataset_divider
 #getting iid data
@@ -24,7 +47,10 @@ x_data, y_data=dataset_divider.divide_without_label(10,X_train, y_train)
 
 #getting non-iid data when there are 5 clients and each client have one attack. Here we don't need 
 #shuflle so dataset.divider.divide with label is sufficient
-x_data, y_data=dataset_divider.divide_with_label(5,X_train, y_train)
+X_train1=X_train[:5000]
+y_train1=y_train[:5000]
+x_data, y_data=dataset_divider.divide_with_label(5,X_train1, y_train1)
+
 
 def non_iid(clients):    
     file = open("train_x_non_iid_5_client.txt",'rb')
@@ -44,13 +70,26 @@ def non_iid(clients):
 x_data, y_data=non_iid(5)
 
 #temp work----------------
-for index in range(len(y_data)):
-    print(pd.Series(y_data[index]).value_counts())
+
+def partial_test_data(X_valid,y_valid,data):
     
+    X_valid=[]
+    y_valid=[]
+    for index in range(0,len(y_valid)):
+        if y_valid[index]==data:
+            X_valid=X_valid.drop([index])
+            y_valid=np.delete(y_valid,index)
+            
+    return X_valid,y_valid
+            
+
 pd.Series(y_valid).value_counts()
+    
+X_valid,y_valid=partial_test_data(X_valid,y_valid,2)
 
-#deleting the 2,3,4 of test dataset
-
+X_valid
+y_valid[22872] not in labels
+temp=X_valid.drop([22872])
 #---------------------------
 
 #getting non-iid data when one client have multiple attack classes and the attack need to be shuffled.
@@ -63,9 +102,9 @@ x_data,y_data=dataset_divider.get_non_iid_data(x_data_temp,y_data_temp,5)
 def get_model():
     model=keras.models.Sequential([
     keras.layers.Flatten(input_shape=[122,]),
-    keras.layers.Dense(200,activation='relu',kernel_regularizer=l1(0.01)),
-    keras.layers.Dense(100,activation='relu',kernel_regularizer=l1(0.01)),
-    keras.layers.Dense(5,activation='softmax',kernel_regularizer=l1(0.01))
+    keras.layers.Dense(200,activation='relu'),
+    keras.layers.Dense(100,activation='relu'),
+    keras.layers.Dense(5,activation='softmax')
     ])
     
     return model
@@ -193,8 +232,9 @@ def train_server_weight_discard(training_rounds,epoch,batch):
 
         
 #initializng the traiing work
+
 start=time.time()
-training_accuracy=train_server(20,5,64)
+training_accuracy=train_server_weight_discard(200,1,64)
 end=time.time()
 print('TOTAL TIME ELPASED = ', end-start)
 
@@ -204,9 +244,34 @@ plt.legend()
 plt.show()
 
 
+x_train_temp=x_data[3][:50000]
+y_train_temp=y_data[3][:50000]
+x_valid_temp=x_data[3][50000:]
+y_valid_temp=y_data[3][50000:]
+
+model=keras.models.Sequential([
+            keras.layers.Flatten(input_shape=[122,]),
+            keras.layers.Dense(200,activation='relu'),
+            keras.layers.Dense(100,activation='relu'),
+            keras.layers.Dense(5,activation='softmax')
+            ])
+
+ 
+model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])  
+history=model.fit(X_train,y_train,epochs=10,batch_size=64) 
 
 
+    from sklearn.metrics import confusion_matrix
+    predicted=pd.DataFrame(model.predict(X_valid))
+    y_valid1=pd.get_dummies(y_valid)
+    confusion_matrix=confusion_matrix(y_valid1.values.argmax(axis=1),predicted.values.argmax(axis=1))
+    print(confusion_matrix)
+    
+    real_weight=model.get_weights()
+    
+    model.set_weights(real_weight)
 
+pd.Series(y_train).value_counts()
 
 
 

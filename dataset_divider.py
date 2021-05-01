@@ -50,7 +50,7 @@ def divide_with_label(parts, X_train_full, y_train_full):
         for x in range (0,parts):
             x_train_list.append(pd.DataFrame(columns=column_name))
             y_train_list.append([])
-                
+        
         for index in range(len(y_train_full)):
             print((index/len(y_train_full))*100)
             for index1 in range(len(labels)):

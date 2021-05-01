@@ -27,11 +27,10 @@ class Client:
         
         model=keras.models.Sequential([
             keras.layers.Flatten(input_shape=[122,]),
-            keras.layers.Dense(200,activation='relu',kernel_regularizer=l1(0.01)),
-            keras.layers.Dense(100,activation='relu',kernel_regularizer=l1(0.01)),
-            keras.layers.Dense(5,activation='softmax',kernel_regularizer=l1(0.01))
+            keras.layers.Dense(200,activation='relu'),
+            keras.layers.Dense(100,activation='relu'),
+            keras.layers.Dense(5,activation='softmax')
             ])
-        
         #setting weight of the model
         model.set_weights(self.weights)
         

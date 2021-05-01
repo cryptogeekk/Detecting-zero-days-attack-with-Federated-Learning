@@ -100,7 +100,7 @@ def nsl_kdd_train_data():
     
     #splitting the dataset into train set and test set
     from sklearn.model_selection import train_test_split
-    train_set,test_set=train_test_split(training_dataset_prepared,test_size=0.2,random_state=42)
+    train_set,test_set=train_test_split(training_dataset_prepared,test_size=0.05,random_state=42)
         #sorting the train_set and test set
     pd.DataFrame.sort_index(train_set,axis=0,ascending=True,inplace=True) 
     pd.DataFrame.sort_index(test_set,axis=0,ascending=True,inplace=True) 
