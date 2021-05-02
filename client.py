@@ -7,12 +7,12 @@ Created on Tue Apr 20 15:43:56 2021
 """
 class Client:
     
-    def __init__(self, dataset_x, dataset_y, epoch_number,weights,batch):
+    def __init__(self, dataset_x, dataset_y, epoch_number, learning_rate,weights,batch):
         self.dataset_x=dataset_x
         self.dataset_y=dataset_y
         # self.mini_batch=mini_batch
         self.epoch_number=epoch_number
-        # self.learning_rate=learning_rate
+        self.learning_rate=learning_rate
         # self.decay_rate=decay_rate
         self.weights=weights
         self.batch=batch
@@ -23,14 +23,16 @@ class Client:
         import pandas as pd
         import matplotlib as plt
         from tensorflow import keras
-        from tensorflow.keras.regularizers import  l1,l2
+        import server
         
+        # model=server.get_model()
         model=keras.models.Sequential([
-            keras.layers.Flatten(input_shape=[122,]),
-            keras.layers.Dense(200,activation='relu'),
-            keras.layers.Dense(100,activation='relu'),
-            keras.layers.Dense(5,activation='softmax')
+                keras.layers.Flatten(input_shape=[122,]),
+                keras.layers.Dense(200,activation='tanh'),
+                keras.layers.Dense(100,activation='tanh'),
+                keras.layers.Dense(5,activation='softmax')
             ])
+        
         #setting weight of the model
         model.set_weights(self.weights)
         
@@ -44,7 +46,7 @@ class Client:
         # wait=animation.Wait()
         # wait.start()
         
-        model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])  
+        model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=self.learning_rate),metrics=['accuracy'])
         history=model.fit(self.dataset_x, self.dataset_y,epochs=self.epoch_number,batch_size=self.batch) 
         
         #getting the final_weight

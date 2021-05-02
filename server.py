@@ -102,8 +102,8 @@ x_data,y_data=dataset_divider.get_non_iid_data(x_data_temp,y_data_temp,5)
 def get_model():
     model=keras.models.Sequential([
     keras.layers.Flatten(input_shape=[122,]),
-    keras.layers.Dense(200,activation='relu'),
-    keras.layers.Dense(100,activation='relu'),
+    keras.layers.Dense(200,activation='tanh'),
+    keras.layers.Dense(100,activation='tanh'),
     keras.layers.Dense(5,activation='softmax')
     ])
     
@@ -146,7 +146,7 @@ def evaluate_model(accuracy_list,weight):
     
 #initializing the client automatically
 from client import Client
-def train_server(training_rounds,epoch,batch):
+def train_server(training_rounds,epoch,batch,learning_rate):
     #temp_variable
     # training_rounds=2 
     # epoch=5 
@@ -163,11 +163,11 @@ def train_server(training_rounds,epoch,batch):
             if index1==1:
                 print('Sharing Initial Global Model with Random Weight Initialization')
                 initial_weight=create_model()
-                client=Client(x_data[index],y_data[index],epoch,initial_weight,batch)
+                client=Client(x_data[index],y_data[index],epoch,learning_rate,initial_weight,batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
             else:
-                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2],batch)
+                client=Client(x_data[index],y_data[index],epoch,learning_rate,client_weight_for_sending[index1-2],batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
     
@@ -188,7 +188,7 @@ def train_server(training_rounds,epoch,batch):
     return accuracy_list
 
 
-def train_server_weight_discard(training_rounds,epoch,batch):
+def train_server_weight_discard(training_rounds,epoch,batch,learning_rate):
     accuracy_list=[]
     client_weight_for_sending=[]
     
@@ -200,11 +200,11 @@ def train_server_weight_discard(training_rounds,epoch,batch):
             if index1==1:
                 print('Sharing Initial Global Model with Random Weight Initialization')
                 initial_weight=create_model()
-                client=Client(x_data[index],y_data[index],epoch,initial_weight,batch)
+                client=Client(x_data[index],y_data[index],epoch,learning_rate,initial_weight,batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
             else:
-                client=Client(x_data[index],y_data[index],epoch,client_weight_for_sending[index1-2],batch)
+                client=Client(x_data[index],y_data[index],epoch,learning_rate,client_weight_for_sending[index1-2],batch)
                 weight=client.train()
                 client_weights_tobe_averaged.append(weight)
         
@@ -217,7 +217,7 @@ def train_server_weight_discard(training_rounds,epoch,batch):
             model=get_model()
             
             model.set_weights(client_average_weight)
-            model.compile(loss='sparse_categorical_crossentropy',optimizer='adam',metrics=['accuracy'])
+            model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=0.1),metrics=['accuracy'])
             result=model.evaluate(X_valid, y_valid)
             accuracy=result[1]
             print('#######-----Acccuracy for round ', index1, 'is ', accuracy, ' ------########')
