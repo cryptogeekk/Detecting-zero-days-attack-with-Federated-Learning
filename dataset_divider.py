@@ -21,6 +21,24 @@ def divide_without_label(parts, X_train_full,y_train_full):
             list_y_train.append(data_y)
             
         return list_x_train, list_y_train
+    
+def nsl_benign_data(x_data,y_data):
+    from sklearn.utils import shuffle
+    x_benign,y_benign=x_data[0],y_data[0]
+    del x_data[0],y_data[0]
+    x_benign,y_benign=shuffle(x_benign,y_benign)
+    x_benign,y_benign=pd.DataFrame(x_benign),pd.DataFrame(y_benign)
+    parts=4
+    data_in_each_part=int(len(y_benign)/parts)
+    for index in range(len(y_data)):
+        print(index)
+        x_temp_benign=x_benign[(index)*data_in_each_part:(index+1)*data_in_each_part]
+        y_temp_benign=y_benign[(index)*data_in_each_part:(index+1)*data_in_each_part]
+        x_data[index]=x_data[index].append(x_temp_benign,ignore_index=True)
+        y_data[index]=np.concatenate((y_data[index],y_temp_benign),axis=None)
+        x_data[index],y_data[index]=shuffle(x_data[index],y_data[index])
+        
+    return x_data,y_data
 
 
 def divide_with_label(parts, X_train_full, y_train_full):

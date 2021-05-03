@@ -68,6 +68,8 @@ def non_iid(clients):
     return x_data[:clients], y_data[:clients]
 
 x_data, y_data=non_iid(5)
+import dataset_divider
+x_data, y_data=dataset_divider.nsl_benign_data(x_data,y_data)
 
 # #temp work----------------
 
@@ -191,10 +193,10 @@ def train_server(training_rounds,epoch,batch,learning_rate):
 
 def train_server_weight_discard(training_rounds,epoch,batch,learning_rate):
     #temp_variable
-    training_rounds=5
-    epoch=3
-    batch=64 
-    learning_rate=0.01
+    # training_rounds=5
+    # epoch=3
+    # batch=64 
+    # learning_rate=0.01
     
     accuracy_list=[]
     client_weight_for_sending=[]
@@ -234,58 +236,58 @@ def train_server_weight_discard(training_rounds,epoch,batch,learning_rate):
         
 #initializng the traiing work
 
-start=time.time()
+# start=time.time()
 training_accuracy,weights=train_server_weight_discard(20,3,64,0.01)
-end=time.time()
-print('TOTAL TIME ELPASED = ', end-start)
+# end=time.time()
+# print('TOTAL TIME ELPASED = ', end-start)
 
-#plotting the graph
-plt.pyplot.plot(training_accuracy,label='train')
-plt.legend()
-plt.show()
+# #plotting the graph
+# plt.pyplot.plot(training_accuracy,label='train')
+# plt.legend()
+# plt.show()
 
 
-x_train_temp=x_data[3][:50000]
-y_train_temp=y_data[3][:50000]
-x_valid_temp=x_data[3][50000:]
-y_valid_temp=y_data[3][50000:]
+# x_train_temp=x_data[3][:50000]
+# y_train_temp=y_data[3][:50000]
+# x_valid_temp=x_data[3][50000:]
+# y_valid_temp=y_data[3][50000:]
 
-model=keras.models.Sequential([
-            keras.layers.Flatten(input_shape=[122,]),
-            keras.layers.Dense(200,activation='tanh'),
-            keras.layers.Dense(100,activation='tanh'),
-            keras.layers.Dense(5,activation='softmax')
-            ])
+# model=keras.models.Sequential([
+#             keras.layers.Flatten(input_shape=[122,]),
+#             keras.layers.Dense(200,activation='tanh'),
+#             keras.layers.Dense(100,activation='tanh'),
+#             keras.layers.Dense(5,activation='softmax')
+#             ])
 
  
-model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=0.01),metrics=['accuracy'])
-history=model.fit(X_train,y_train,epochs=10,batch_size=64, validation_data=(X_valid,y_valid)) 
+# model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=0.01),metrics=['accuracy'])
+# history=model.fit(X_train,y_train,epochs=10,batch_size=64, validation_data=(X_valid,y_valid)) 
 
 
-from sklearn.metrics import confusion_matrix
-predicted=pd.DataFrame(model.predict(X_valid))
-y_valid1=pd.get_dummies(y_valid)
-confusion_matrix=confusion_matrix(y_valid1.values.argmax(axis=1),predicted.values.argmax(axis=1))
-print(confusion_matrix)
+# from sklearn.metrics import confusion_matrix
+# predicted=pd.DataFrame(model.predict(X_valid))
+# y_valid1=pd.get_dummies(y_valid)
+# confusion_matrix=confusion_matrix(y_valid1.values.argmax(axis=1),predicted.values.argmax(axis=1))
+# print(confusion_matrix)
 
-real_weight=model.get_weights()
-final_weight=model.get_weights()
+# real_weight=model.get_weights()
+# final_weight=model.get_weights()
 
-model.set_weights(real_weight)
+# model.set_weights(real_weight)
 
-pd.Series(y_train).value_counts()
+# pd.Series(y_train).value_counts()
 
 
-model.set_weights(weights)
-base_weight=client_weight_for_sending[3]
+# model.set_weights(weights)
+# base_weight=client_weight_for_sending[3]
 
-layer_list=[1,2]
-index_list=[0,1,2,3,4,5]
-for index,index1 in index_list,layer_list:
-    model.layers[index1].set_weights(zip(base_weight[index],base_weight[index+1]))
+# layer_list=[1,2]
+# index_list=[0,1,2,3,4,5]
+# for index,index1 in index_list,layer_list:
+#     model.layers[index1].set_weights(zip(base_weight[index],base_weight[index+1]))
 
-model.layers[3].set_weights(list1)
-list1=(final_weight[4],final_weight[5])
+# model.layers[3].set_weights(list1)
+# list1=(final_weight[4],final_weight[5])
 
-temp=model.layers[4].get_weights()
-temp2=model.get_weights()
+# temp=model.layers[4].get_weights()
+# temp2=model.get_weights()
