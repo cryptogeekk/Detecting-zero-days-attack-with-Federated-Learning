@@ -36,15 +36,7 @@ class Client:
         #setting weight of the model
         model.set_weights(self.weights)
         
-        #getting the initial weight of the model
-        # initial_weight=model.get_weights()
-        # output_weight_list=[]
-        
-        #training the model
-        # import animation
-        # print('###### Client1 Training started ######')
-        # wait=animation.Wait()
-        # wait.start()
+       
         
         model.compile(loss='sparse_categorical_crossentropy',optimizer=keras.optimizers.SGD(lr=self.learning_rate),metrics=['accuracy'])
         history=model.fit(self.dataset_x, self.dataset_y,epochs=self.epoch_number,batch_size=self.batch) 
